@@ -1,0 +1,3 @@
+language = Objective-C
+package = com.hamdy.clarity.interop
+headers = ClarityInterop.h

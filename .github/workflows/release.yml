@@ -1,0 +1,49 @@
+name: Release
+
+# Publishes :clarity-kmp and :clarity-kmp-compose to Maven Central whenever a
+# `vX.Y.Z` tag is pushed. The publication version is derived from the tag
+# (GITHUB_REF_NAME, with the leading `v` stripped) in the root build script.
+# Publications are signed with an in-memory GPG key and released automatically
+# (automaticRelease = true), so no manual Central Portal action is needed.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - uses: android-actions/setup-android@v3
+
+      # Confirm the public API hasn't drifted and that tests pass before publishing.
+      - name: Verify (tests, API check, lint)
+        run: |
+          ./gradlew allTests apiCheck lintRelease --stacktrace
+
+      # Publish to Maven Central. The Vanniktech plugin reads credentials from
+      # these environment variables / Gradle properties (see docs/RELEASING.md).
+      - name: Publish to Maven Central
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          ./gradlew \
+            :clarity-kmp:publishAllPublicationsToMavenCentral \
+            :clarity-kmp-compose:publishAllPublicationsToMavenCentral \
+            --stacktrace --no-configuration-cache

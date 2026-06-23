@@ -1,0 +1,15 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.hamdy.clarity:clarity-kmp-compose>
+final val com.hamdy.clarity.compose/LocalClarityClient // com.hamdy.clarity.compose/LocalClarityClient|{}LocalClarityClient[0]
+    final fun <get-LocalClarityClient>(): androidx.compose.runtime/ProvidableCompositionLocal<com.hamdy.clarity/ClarityClient> // com.hamdy.clarity.compose/LocalClarityClient.<get-LocalClarityClient>|<get-LocalClarityClient>(){}[0]
+
+final fun (androidx.compose.ui/Modifier).com.hamdy.clarity.compose/clarityClickable(kotlin/String, com.hamdy.clarity/ClarityClient?, kotlin/Boolean, kotlin/String?, androidx.compose.ui.semantics/Role?, kotlin/Function0<kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int): androidx.compose.ui/Modifier // com.hamdy.clarity.compose/clarityClickable|clarityClickable@androidx.compose.ui.Modifier(kotlin.String;com.hamdy.clarity.ClarityClient?;kotlin.Boolean;kotlin.String?;androidx.compose.ui.semantics.Role?;kotlin.Function0<kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.hamdy.clarity.compose/ClarityProvider(com.hamdy.clarity/ClarityClient, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int) // com.hamdy.clarity.compose/ClarityProvider|ClarityProvider(com.hamdy.clarity.ClarityClient;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+final fun com.hamdy.clarity.compose/ClarityScreen(kotlin/String, com.hamdy.clarity/ClarityClient?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.hamdy.clarity.compose/ClarityScreen|ClarityScreen(kotlin.String;com.hamdy.clarity.ClarityClient?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.hamdy.clarity.compose/TrackClarityEventOnFirstComposition(kotlin/String, com.hamdy.clarity/ClarityClient?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.hamdy.clarity.compose/TrackClarityEventOnFirstComposition|TrackClarityEventOnFirstComposition(kotlin.String;com.hamdy.clarity.ClarityClient?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]

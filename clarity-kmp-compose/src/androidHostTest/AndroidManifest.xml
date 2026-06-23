@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      Provides a resolvable launcher activity so Robolectric's ActivityScenario can launch
+      androidx.activity.ComponentActivity, which androidx.compose.ui.test.runComposeUiTest
+      requires. Library modules have no launcher activity by default, which otherwise causes
+      "Unable to resolve activity for Intent .../ComponentActivity" at test runtime.
+    -->
+    <application>
+        <activity
+            android:name="androidx.activity.ComponentActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
