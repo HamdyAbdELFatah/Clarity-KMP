@@ -1,37 +1,64 @@
 # Clarity KMP
 
-Unofficial Kotlin Multiplatform bindings for the official Microsoft Clarity Android and iOS SDKs. The library supports Android Views, Android Compose, UIKit-hosted Compose Multiplatform, and common tracking code.
+**Use Microsoft Clarity in Kotlin Multiplatform with one shared API.**
 
-This project is not affiliated with or endorsed by Microsoft.
+Microsoft ships two separate native SDKs — one for Android, one for iOS — with
+different APIs and different return types. This library wraps both behind a single
+`ClarityClient` interface, so you write your analytics code **once** in `commonMain`
+and it runs on both platforms.
 
-## Support
+> Not affiliated with or endorsed by Microsoft.
 
-| Target | Library target / build minimum | Clarity data capture (`isSupported`) |
+---
+
+## ✨ What you get
+
+- **One API on both platforms** — `sendCustomEvent("…")`, `setCustomTag(…)`, `setCurrentScreenName(…)` all work from shared Kotlin.
+- **No more dual maintenance** — no per-platform wrapper code for Clarity.
+- **Safe by default** — a no-op client for previews/tests, input validation, a real state machine, and main-thread enforcement.
+- **Compose helpers** — declarative screen + tap tracking for Compose Multiplatform (`clarity-kmp-compose`).
+
+## 📋 Requirements
+
+| Platform | Min target | Clarity captures data from |
 |---|---|---|
-| Android | `minSdk` 24 | API 29–36 |
-| iOS | iOS 15 (sample `IPHONEOS_DEPLOYMENT_TARGET`) | iOS 15–18 |
+| Android | `minSdk` 24 | API 29+ |
+| iOS | iOS 15 | iOS 15+ |
 
-`ClarityClient.isSupported` reports `true` only where Microsoft Clarity captures
-data (Android API 29+, iOS 15+). On older OS versions the client constructs and
-runs without crashing but reports `ClarityState.Unsupported` and records nothing,
-so you may set a lower deployment target than the capture floor if you need to
-support those devices.
+Below the capture floor the client still constructs and runs without crashing, but reports `ClarityState.Unsupported` and records nothing — so you can keep a lower deployment target than the capture floor.
 
-## Installation
+## 📦 Installation
+
+Add **one** of the two artifacts to your `commonMain`:
+
+**Option A — Core (views / no Compose):**
 
 ```kotlin
 commonMain.dependencies {
     implementation("com.hamdy.clarity:clarity-kmp:0.1.0")
-    // Use instead of the core dependency when using Compose Multiplatform:
+}
+```
+
+**Option B — Compose Multiplatform (recommended for Compose apps):**
+
+```kotlin
+commonMain.dependencies {
     implementation("com.hamdy.clarity:clarity-kmp-compose:0.1.0")
 }
 ```
 
-The Compose artifact supplies `clarity-kmp` transitively and uses Microsoft's `clarity-compose` SDK on Android. Do not add both project artifacts or both Microsoft Android SDK artifacts manually.
+The Compose artifact already includes `clarity-kmp` transitively. **Don't add both** artifacts — pick one.
 
-### Android
+---
 
-Create one client on the main thread in `Application.onCreate`:
+## 🚀 Setup
+
+### Android (automatic)
+
+Nothing to configure. When you add the dependency, Gradle pulls Microsoft's
+Android Clarity SDK automatically — there is no manual step.
+
+1. Create the client on the main thread in `Application.onCreate`:
 
 ```kotlin
 class App : Application() {
@@ -43,8 +70,8 @@ class App : Application() {
         clarity = createClarityClient(
             context = this,
             config = ClarityConfig(
-                projectId = BuildConfig.CLARITY_PROJECT_ID,
-                enabled = !BuildConfig.DEBUG,
+                projectId = "YOUR_PROJECT_ID",
+                enabled = !BuildConfig.DEBUG,   // off in debug builds
                 logLevel = ClarityLogLevel.None,
             ),
         )
@@ -52,11 +79,34 @@ class App : Application() {
 }
 ```
 
-### iOS
+2. Pass it into your shared code. Done. ✅
 
-The Maven artifact contains Kotlin bindings, not Microsoft's binary. Link `https://github.com/microsoft/clarity-apps` version `3.5.3` or newer to the host target and select its `Clarity` product. CocoaPods users can add `pod 'Clarity', '~> 3.5'`.
+> **Using the Compose artifact on Android?** Your app module must exclude the
+> standalone `com.microsoft.clarity:clarity` to avoid duplicate classes (the
+> Compose artifact already bundles them):
+> ```kotlin
+> implementation("com.hamdy.clarity:clarity-kmp") {
+>     exclude(group = "com.microsoft.clarity", module = "clarity")
+> }
+> ```
 
-Create the client from the iOS main thread before constructing shared UI:
+### iOS (one manual step)
+
+**Why one extra step?** A Kotlin Multiplatform library ships as an `.xcframework`
+of *compiled Kotlin*. Apple's tooling does not let a KMP library re-distribute a
+third-party native SDK binary inside it. So the Maven artifact contains only the
+Kotlin bindings — you must link Microsoft's iOS Clarity binary once, by hand. This
+is a platform constraint, not a library limitation; every KMP wrapper around a
+native iOS SDK (Firebase, Mapbox, …) works the same way.
+
+1. **Link Microsoft's iOS Clarity SDK.** In Xcode, go to your app target →
+   **Package Dependencies** → add `https://github.com/microsoft/clarity-apps`
+   (version `3.5.3` or newer), and tick the **`Clarity`** product.
+
+   CocoaPods alternative: `pod 'Clarity', '~> 3.5'`.
+
+2. **Create the client from the iOS main thread** (in your shared module's
+   `iosMain` entry point, before building the UI):
 
 ```kotlin
 val clarity = createClarityClient(
@@ -64,13 +114,16 @@ val clarity = createClarityClient(
 )
 ```
 
-See `sample/iosApp` for the complete SwiftUI/SPM host.
+3. Done. ✅ See `sample/iosApp` for a complete SwiftUI host.
 
-## Common Usage
+---
 
-Inject `ClarityClient` into shared code rather than reading global state:
+## 🧭 Track from shared code
+
+Inject `ClarityClient` into your shared code rather than using globals:
 
 ```kotlin
+// Works on Android AND iOS — written once in commonMain
 clarity.setOnSessionStartedCallback { sessionId ->
     println("Clarity session: $sessionId")
 }
@@ -81,33 +134,72 @@ clarity.setCurrentScreenName("Checkout")
 clarity.sendCustomEvent("purchase_submitted")
 ```
 
-Operations return `true` only when accepted. `InitializationAccepted` means the asynchronous SDK initialization request was accepted; wait for `Active` or the session callback before sending session metadata. Initial IDs and tags in `ClarityConfig` are applied automatically when a session starts.
+**Rules of thumb:**
 
-Use `pause()` and `resume()` for runtime capture control. `enabled=false` prevents SDK initialization and returns a disabled client. All APIs must be invoked on the platform main thread.
+- Every mutating method returns `Boolean` — `true` means accepted, `false` means the client isn't active yet or the input was invalid. It never throws.
+- Wait for `ClarityState.Active` (or the session callback) before sending session metadata. `InitializationAccepted` only means the async init request was accepted.
+- Initial `customUserId` / `customSessionId` / `customTags` set in `ClarityConfig` are re-applied automatically on every new session.
+- `pause()` / `resume()` control capture at runtime; `enabled = false` in config gives you a disabled client that records nothing.
+- **All APIs must be called on the platform main thread.**
 
-## Compose
+## 🎨 Compose helpers (`clarity-kmp-compose`)
 
 ```kotlin
-ClarityProvider(clarity) {
-    ClarityScreen("Checkout") {
+ClarityProvider(clarity) {                       // make client available below
+    ClarityScreen("Checkout") {                  // auto-reports this screen
         Button(
-            modifier = Modifier.clarityClickable("purchase_clicked"),
+            modifier = Modifier.clarityClickable("purchase_clicked"),  // track taps
             onClick = ::purchase,
         ) { Text("Buy") }
     }
 }
 ```
 
-`LocalClarityClient` defaults to a no-op client, so previews and tests do not record data. `TrackClarityEventOnFirstComposition` emits once per composition lifecycle.
+- `LocalClarityClient` defaults to a no-op client, so **previews and tests record nothing** unless you provide a real one.
+- `TrackClarityEventOnFirstComposition("home_viewed")` fires an event once per composition lifecycle.
 
-## Privacy
+## 📖 API reference
 
-- Never send names, email addresses, phone numbers, credentials, tokens, health data, or other PII.
-- Obtain and store consent before calling `setConsent`. Android maps analytics and ads storage; iOS currently supports analytics storage only.
-- Mask sensitive screens and controls using the native Microsoft SDK configuration. Compose helpers do not override Microsoft dashboard masking rules.
-- Clarity must not be used in apps directed to users under 18. Review Microsoft's current terms and platform documentation before release.
+| API | Purpose |
+|---|---|
+| `createClarityClient(config)` (iOS) / `(context, config)` (Android) | Construct the client on the main thread |
+| `noOpClarityClient()` | Safe no-op for previews/tests |
+| `state` | Lifecycle: `NotInitialized → InitializationAccepted → Active ⇄ Paused` (or `Disabled` / `Unsupported` / `Failed`) |
+| `isSupported` | `true` where Clarity captures data (Android API 29+, iOS 15+) |
+| `setCustomUserId(id)` | Stitch sessions across devices for a user |
+| `setCustomSessionId(id)` | Override the auto-generated session id |
+| `setCurrentScreenName(name)` | Record current screen (dashboard) |
+| `sendCustomEvent(name)` | Attach a custom event to the session |
+| `setCustomTag(key, value(s))` | Tag the session (single or multi-value) |
+| `pause()` / `resume()` | Runtime capture control |
+| `startNewSession { }` | End the current session and start a fresh one |
+| `getCurrentSessionUrl()` | Replay URL of the current session, or `null` |
+| `setOnSessionStartedCallback { }` | Called on every new session |
+| `setConsent(ClarityConsent)` | Apply GDPR consent (Android: analytics + ads; iOS: analytics only) |
 
-## Development
+Limits (Microsoft's): IDs / tags / screen names ≤ 255 chars; event names ≤ 254 chars.
+
+---
+
+## ❓ Troubleshooting
+
+- **`state` is `Unsupported`** — your OS is below the capture floor (Android < 29, iOS < 15). The SDK is present but records nothing.
+- **`state` is `InitializationAccepted` but calls return `false`** — initialization was accepted but no session has started yet. Wait for `Active` / the session callback before sending metadata.
+- **iOS build fails with undefined `Clarity*` symbols** — the host app didn't link Microsoft's iOS Clarity SDK. Redo the iOS step 1 (add the SPM package and select the `Clarity` product).
+- **Duplicate `com.microsoft.clarity.*` classes on Android** — you added both the core and Compose artifacts, or both Microsoft Android SDKs. Use only `clarity-kmp-compose` and apply the `exclude` snippet above.
+
+## 🔒 Privacy
+
+- **Never send PII** — no names, emails, phone numbers, credentials, tokens, or health data.
+- Obtain and store consent before calling `setConsent`. Android honors analytics **and** ads storage; iOS supports analytics storage only.
+- Mask sensitive screens/controls via Microsoft's native SDK config. The Compose helpers do **not** override Microsoft dashboard masking rules.
+- Clarity must not be used in apps directed to users under 18. Review Microsoft's current terms before release.
+
+## 🧪 Sample app
+
+A full working example lives in [`sample/`](sample/) — an Android app, a Compose Multiplatform module, and a SwiftUI iOS host that links the real Clarity SDK via SPM.
+
+## 🛠️ Development
 
 ```bash
 ./gradlew allTests lintRelease apiCheck dokkaGenerate
@@ -117,6 +209,6 @@ ClarityProvider(clarity) {
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [docs/RELEASING.md](docs/RELEASING.md), and [docs/AUDIT.md](docs/AUDIT.md).
 
-## License
+## 📄 License
 
 Apache-2.0. Microsoft Clarity is distributed separately under Microsoft's terms.
