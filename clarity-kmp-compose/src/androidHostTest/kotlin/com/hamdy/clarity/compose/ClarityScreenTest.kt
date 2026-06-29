@@ -50,4 +50,44 @@ class ClarityScreenTest {
         waitForIdle()
         assertEquals(listOf("screen:Home", "screen:Settings"), client.calls)
     }
+
+    @Test
+    fun clearsScreenNameOnExitWhenRestoreOnExit() = runComposeUiTest {
+        // restoreOnExit = true (default): dropping the screen from the composition resets the
+        // reported name to null so a navigated-away screen stops reporting.
+        val client = RecordingClarityClient()
+        var visible by mutableStateOf(true)
+        setContent {
+            ClarityProvider(client = client) {
+                if (visible) ClarityScreen(name = "Home") { }
+            }
+        }
+        waitForIdle()
+        assertEquals(listOf("screen:Home"), client.calls)
+
+        visible = false // ClarityScreen leaves the composition → DisposableEffect disposes.
+        waitForIdle()
+
+        assertEquals(listOf("screen:Home", "screen:null"), client.calls)
+    }
+
+    @Test
+    fun keepsScreenNameWhenRestoreOnExitFalse() = runComposeUiTest {
+        // restoreOnExit = false: preserves the previous sticky behavior — no reset on exit.
+        val client = RecordingClarityClient()
+        var visible by mutableStateOf(true)
+        setContent {
+            ClarityProvider(client = client) {
+                if (visible) ClarityScreen(name = "Home", restoreOnExit = false) { }
+            }
+        }
+        waitForIdle()
+        assertEquals(listOf("screen:Home"), client.calls)
+
+        visible = false
+        waitForIdle()
+
+        // No screen:null reset: the name stays set after the screen leaves the composition.
+        assertEquals(listOf("screen:Home"), client.calls)
+    }
 }

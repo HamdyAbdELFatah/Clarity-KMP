@@ -34,7 +34,7 @@ class RecordingClarityClientTest {
 
     @Test
     fun nonRecordedOperationsAreNoOps() {
-        val client = RecordingClarityClient(state = ClarityState.Active)
+        val client = RecordingClarityClient(initialState = ClarityState.Active)
 
         assertEquals(false, client.pause())
         assertEquals(false, client.resume())
