@@ -6,6 +6,17 @@
 // - Show declarations: true
 
 // Library unique name: <com.hamdy.clarity:clarity-kmp>
+final enum class com.hamdy.clarity/ClarityDispatchStrategy : kotlin/Enum<com.hamdy.clarity/ClarityDispatchStrategy> { // com.hamdy.clarity/ClarityDispatchStrategy|null[0]
+    enum entry DispatchToMain // com.hamdy.clarity/ClarityDispatchStrategy.DispatchToMain|null[0]
+    enum entry EnforceMainThread // com.hamdy.clarity/ClarityDispatchStrategy.EnforceMainThread|null[0]
+
+    final val entries // com.hamdy.clarity/ClarityDispatchStrategy.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.hamdy.clarity/ClarityDispatchStrategy> // com.hamdy.clarity/ClarityDispatchStrategy.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.hamdy.clarity/ClarityDispatchStrategy // com.hamdy.clarity/ClarityDispatchStrategy.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.hamdy.clarity/ClarityDispatchStrategy> // com.hamdy.clarity/ClarityDispatchStrategy.values|values#static(){}[0]
+}
+
 final enum class com.hamdy.clarity/ClarityLogLevel : kotlin/Enum<com.hamdy.clarity/ClarityLogLevel> { // com.hamdy.clarity/ClarityLogLevel|null[0]
     enum entry Debug // com.hamdy.clarity/ClarityLogLevel.Debug|null[0]
     enum entry Error // com.hamdy.clarity/ClarityLogLevel.Error|null[0]
@@ -21,6 +32,14 @@ final enum class com.hamdy.clarity/ClarityLogLevel : kotlin/Enum<com.hamdy.clari
     final fun values(): kotlin/Array<com.hamdy.clarity/ClarityLogLevel> // com.hamdy.clarity/ClarityLogLevel.values|values#static(){}[0]
 }
 
+abstract fun interface com.hamdy.clarity/ObserverHandle { // com.hamdy.clarity/ObserverHandle|null[0]
+    abstract fun cancel() // com.hamdy.clarity/ObserverHandle.cancel|cancel(){}[0]
+}
+
+abstract fun interface com.hamdy.clarity/StateObserver { // com.hamdy.clarity/StateObserver|null[0]
+    abstract fun onStateChanged(com.hamdy.clarity/ClarityState) // com.hamdy.clarity/StateObserver.onStateChanged|onStateChanged(com.hamdy.clarity.ClarityState){}[0]
+}
+
 abstract interface com.hamdy.clarity/ClarityClient { // com.hamdy.clarity/ClarityClient|null[0]
     abstract val isPaused // com.hamdy.clarity/ClarityClient.isPaused|{}isPaused[0]
         abstract fun <get-isPaused>(): kotlin/Boolean // com.hamdy.clarity/ClarityClient.isPaused.<get-isPaused>|<get-isPaused>(){}[0]
@@ -30,6 +49,7 @@ abstract interface com.hamdy.clarity/ClarityClient { // com.hamdy.clarity/Clarit
         abstract fun <get-state>(): com.hamdy.clarity/ClarityState // com.hamdy.clarity/ClarityClient.state.<get-state>|<get-state>(){}[0]
 
     abstract fun getCurrentSessionUrl(): kotlin/String? // com.hamdy.clarity/ClarityClient.getCurrentSessionUrl|getCurrentSessionUrl(){}[0]
+    abstract fun observeState(com.hamdy.clarity/StateObserver): com.hamdy.clarity/ObserverHandle // com.hamdy.clarity/ClarityClient.observeState|observeState(com.hamdy.clarity.StateObserver){}[0]
     abstract fun pause(): kotlin/Boolean // com.hamdy.clarity/ClarityClient.pause|pause(){}[0]
     abstract fun resume(): kotlin/Boolean // com.hamdy.clarity/ClarityClient.resume|resume(){}[0]
     abstract fun sendCustomEvent(kotlin/String): kotlin/Boolean // com.hamdy.clarity/ClarityClient.sendCustomEvent|sendCustomEvent(kotlin.String){}[0]
@@ -95,14 +115,18 @@ sealed interface com.hamdy.clarity/ClarityState { // com.hamdy.clarity/ClaritySt
 }
 
 final class com.hamdy.clarity/ClarityConfig { // com.hamdy.clarity/ClarityConfig|null[0]
-    constructor <init>(kotlin/String, kotlin/Boolean = ..., com.hamdy.clarity/ClarityLogLevel = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin.collections/Set<kotlin/String>> = ...) // com.hamdy.clarity/ClarityConfig.<init>|<init>(kotlin.String;kotlin.Boolean;com.hamdy.clarity.ClarityLogLevel;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.collections.Set<kotlin.String>>){}[0]
+    constructor <init>(kotlin/String, kotlin/Boolean = ..., com.hamdy.clarity/ClarityLogLevel = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin.collections/Set<kotlin/String>> = ..., kotlin/Boolean = ..., com.hamdy.clarity/ClarityDispatchStrategy = ...) // com.hamdy.clarity/ClarityConfig.<init>|<init>(kotlin.String;kotlin.Boolean;com.hamdy.clarity.ClarityLogLevel;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.collections.Set<kotlin.String>>;kotlin.Boolean;com.hamdy.clarity.ClarityDispatchStrategy){}[0]
 
+    final val bufferUntilActive // com.hamdy.clarity/ClarityConfig.bufferUntilActive|{}bufferUntilActive[0]
+        final fun <get-bufferUntilActive>(): kotlin/Boolean // com.hamdy.clarity/ClarityConfig.bufferUntilActive.<get-bufferUntilActive>|<get-bufferUntilActive>(){}[0]
     final val customSessionId // com.hamdy.clarity/ClarityConfig.customSessionId|{}customSessionId[0]
         final fun <get-customSessionId>(): kotlin/String? // com.hamdy.clarity/ClarityConfig.customSessionId.<get-customSessionId>|<get-customSessionId>(){}[0]
     final val customTags // com.hamdy.clarity/ClarityConfig.customTags|{}customTags[0]
         final fun <get-customTags>(): kotlin.collections/Map<kotlin/String, kotlin.collections/Set<kotlin/String>> // com.hamdy.clarity/ClarityConfig.customTags.<get-customTags>|<get-customTags>(){}[0]
     final val customUserId // com.hamdy.clarity/ClarityConfig.customUserId|{}customUserId[0]
         final fun <get-customUserId>(): kotlin/String? // com.hamdy.clarity/ClarityConfig.customUserId.<get-customUserId>|<get-customUserId>(){}[0]
+    final val dispatchStrategy // com.hamdy.clarity/ClarityConfig.dispatchStrategy|{}dispatchStrategy[0]
+        final fun <get-dispatchStrategy>(): com.hamdy.clarity/ClarityDispatchStrategy // com.hamdy.clarity/ClarityConfig.dispatchStrategy.<get-dispatchStrategy>|<get-dispatchStrategy>(){}[0]
     final val enabled // com.hamdy.clarity/ClarityConfig.enabled|{}enabled[0]
         final fun <get-enabled>(): kotlin/Boolean // com.hamdy.clarity/ClarityConfig.enabled.<get-enabled>|<get-enabled>(){}[0]
     final val logLevel // com.hamdy.clarity/ClarityConfig.logLevel|{}logLevel[0]
@@ -116,7 +140,9 @@ final class com.hamdy.clarity/ClarityConfig { // com.hamdy.clarity/ClarityConfig
     final fun component4(): kotlin/String? // com.hamdy.clarity/ClarityConfig.component4|component4(){}[0]
     final fun component5(): kotlin/String? // com.hamdy.clarity/ClarityConfig.component5|component5(){}[0]
     final fun component6(): kotlin.collections/Map<kotlin/String, kotlin.collections/Set<kotlin/String>> // com.hamdy.clarity/ClarityConfig.component6|component6(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/Boolean = ..., com.hamdy.clarity/ClarityLogLevel = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin.collections/Set<kotlin/String>> = ...): com.hamdy.clarity/ClarityConfig // com.hamdy.clarity/ClarityConfig.copy|copy(kotlin.String;kotlin.Boolean;com.hamdy.clarity.ClarityLogLevel;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.collections.Set<kotlin.String>>){}[0]
+    final fun component7(): kotlin/Boolean // com.hamdy.clarity/ClarityConfig.component7|component7(){}[0]
+    final fun component8(): com.hamdy.clarity/ClarityDispatchStrategy // com.hamdy.clarity/ClarityConfig.component8|component8(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Boolean = ..., com.hamdy.clarity/ClarityLogLevel = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin.collections/Set<kotlin/String>> = ..., kotlin/Boolean = ..., com.hamdy.clarity/ClarityDispatchStrategy = ...): com.hamdy.clarity/ClarityConfig // com.hamdy.clarity/ClarityConfig.copy|copy(kotlin.String;kotlin.Boolean;com.hamdy.clarity.ClarityLogLevel;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.collections.Set<kotlin.String>>;kotlin.Boolean;com.hamdy.clarity.ClarityDispatchStrategy){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.hamdy.clarity/ClarityConfig.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.hamdy.clarity/ClarityConfig.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.hamdy.clarity/ClarityConfig.toString|toString(){}[0]
@@ -145,5 +171,28 @@ final class com.hamdy.clarity/ClarityConsent { // com.hamdy.clarity/ClarityConse
     final fun toString(): kotlin/String // com.hamdy.clarity/ClarityConsent.toString|toString(){}[0]
 }
 
+final val com.hamdy.clarity/isActive // com.hamdy.clarity/isActive|@com.hamdy.clarity.ClarityClient{}isActive[0]
+    final inline fun (com.hamdy.clarity/ClarityClient).<get-isActive>(): kotlin/Boolean // com.hamdy.clarity/isActive.<get-isActive>|<get-isActive>@com.hamdy.clarity.ClarityClient(){}[0]
+final val com.hamdy.clarity/isReady // com.hamdy.clarity/isReady|@com.hamdy.clarity.ClarityClient{}isReady[0]
+    final inline fun (com.hamdy.clarity/ClarityClient).<get-isReady>(): kotlin/Boolean // com.hamdy.clarity/isReady.<get-isReady>|<get-isReady>@com.hamdy.clarity.ClarityClient(){}[0]
+final val com.hamdy.clarity/isTerminal // com.hamdy.clarity/isTerminal|@com.hamdy.clarity.ClarityClient{}isTerminal[0]
+    final inline fun (com.hamdy.clarity/ClarityClient).<get-isTerminal>(): kotlin/Boolean // com.hamdy.clarity/isTerminal.<get-isTerminal>|<get-isTerminal>@com.hamdy.clarity.ClarityClient(){}[0]
+
+final fun (com.hamdy.clarity/ClarityClient).com.hamdy.clarity/screen(kotlin/String?): kotlin/Boolean // com.hamdy.clarity/screen|screen@com.hamdy.clarity.ClarityClient(kotlin.String?){}[0]
+final fun (com.hamdy.clarity/ClarityClient).com.hamdy.clarity/sendEvents(kotlin/Array<out kotlin/String>...): kotlin/Boolean // com.hamdy.clarity/sendEvents|sendEvents@com.hamdy.clarity.ClarityClient(kotlin.Array<out|kotlin.String>...){}[0]
+final fun (com.hamdy.clarity/ClarityClient).com.hamdy.clarity/sessionId(kotlin/String): kotlin/Boolean // com.hamdy.clarity/sessionId|sessionId@com.hamdy.clarity.ClarityClient(kotlin.String){}[0]
+final fun (com.hamdy.clarity/ClarityClient).com.hamdy.clarity/setTags(kotlin.collections/Map<kotlin/String, kotlin.collections/Set<kotlin/String>>): kotlin/Boolean // com.hamdy.clarity/setTags|setTags@com.hamdy.clarity.ClarityClient(kotlin.collections.Map<kotlin.String,kotlin.collections.Set<kotlin.String>>){}[0]
+final fun (com.hamdy.clarity/ClarityClient).com.hamdy.clarity/setTags(kotlin/Array<out kotlin/Pair<kotlin/String, kotlin/String>>...): kotlin/Boolean // com.hamdy.clarity/setTags|setTags@com.hamdy.clarity.ClarityClient(kotlin.Array<out|kotlin.Pair<kotlin.String,kotlin.String>>...){}[0]
+final fun (com.hamdy.clarity/ClarityClient).com.hamdy.clarity/tag(kotlin/String, kotlin.collections/Set<kotlin/String>): kotlin/Boolean // com.hamdy.clarity/tag|tag@com.hamdy.clarity.ClarityClient(kotlin.String;kotlin.collections.Set<kotlin.String>){}[0]
+final fun (com.hamdy.clarity/ClarityClient).com.hamdy.clarity/tag(kotlin/String, kotlin/String): kotlin/Boolean // com.hamdy.clarity/tag|tag@com.hamdy.clarity.ClarityClient(kotlin.String;kotlin.String){}[0]
+final fun (com.hamdy.clarity/ClarityClient).com.hamdy.clarity/trackEvent(kotlin/String): kotlin/Boolean // com.hamdy.clarity/trackEvent|trackEvent@com.hamdy.clarity.ClarityClient(kotlin.String){}[0]
+final fun (com.hamdy.clarity/ClarityClient).com.hamdy.clarity/userId(kotlin/String): kotlin/Boolean // com.hamdy.clarity/userId|userId@com.hamdy.clarity.ClarityClient(kotlin.String){}[0]
+final fun (kotlin/String).com.hamdy.clarity/isValidClarityEventName(): kotlin/Boolean // com.hamdy.clarity/isValidClarityEventName|isValidClarityEventName@kotlin.String(){}[0]
+final fun (kotlin/String).com.hamdy.clarity/isValidClarityValue(): kotlin/Boolean // com.hamdy.clarity/isValidClarityValue|isValidClarityValue@kotlin.String(){}[0]
+final fun (kotlin/String).com.hamdy.clarity/truncatedToClarityEventName(): kotlin/String // com.hamdy.clarity/truncatedToClarityEventName|truncatedToClarityEventName@kotlin.String(){}[0]
+final fun (kotlin/String).com.hamdy.clarity/truncatedToClarityValue(): kotlin/String // com.hamdy.clarity/truncatedToClarityValue|truncatedToClarityValue@kotlin.String(){}[0]
 final fun com.hamdy.clarity/createClarityClient(com.hamdy.clarity/ClarityConfig): com.hamdy.clarity/ClarityClient // com.hamdy.clarity/createClarityClient|createClarityClient(com.hamdy.clarity.ClarityConfig){}[0]
 final fun com.hamdy.clarity/noOpClarityClient(): com.hamdy.clarity/ClarityClient // com.hamdy.clarity/noOpClarityClient|noOpClarityClient(){}[0]
+final inline fun (com.hamdy.clarity/ClarityClient).com.hamdy.clarity/ifActive(kotlin/Function1<com.hamdy.clarity/ClarityClient, kotlin/Unit>): kotlin/Boolean // com.hamdy.clarity/ifActive|ifActive@com.hamdy.clarity.ClarityClient(kotlin.Function1<com.hamdy.clarity.ClarityClient,kotlin.Unit>){}[0]
+final inline fun (com.hamdy.clarity/ClarityClient).com.hamdy.clarity/ifReady(kotlin/Function1<com.hamdy.clarity/ClarityClient, kotlin/Unit>): kotlin/Boolean // com.hamdy.clarity/ifReady|ifReady@com.hamdy.clarity.ClarityClient(kotlin.Function1<com.hamdy.clarity.ClarityClient,kotlin.Unit>){}[0]
+final inline fun <#A: kotlin/Any?> (com.hamdy.clarity/ClarityClient).com.hamdy.clarity/withScreen(kotlin/String, kotlin/Function0<#A>): #A // com.hamdy.clarity/withScreen|withScreen@com.hamdy.clarity.ClarityClient(kotlin.String;kotlin.Function0<0:0>){0§<kotlin.Any?>}[0]
