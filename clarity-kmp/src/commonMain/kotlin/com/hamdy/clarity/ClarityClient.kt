@@ -22,6 +22,26 @@ package com.hamdy.clarity
  * Mutating calls take effect only while [state] is [ClarityState.Active] or
  * [ClarityState.Paused]. See [state] and [ClarityState] for the lifecycle.
  */
+/**
+ * Receives [ClarityClient.state] transitions. Registered via [ClarityClient.observeState], which
+ * invokes the observer **immediately with the current state** on registration and then on every
+ * change. Implementations are always invoked on the platform main thread.
+ *
+ * Functional interface — pass a lambda: `clarity.observeState { state -> ... }`.
+ */
+public fun interface StateObserver {
+    public fun onStateChanged(state: ClarityState)
+}
+
+/**
+ * A cancellable subscription returned by [ClarityClient.observeState]. Call [cancel] to stop
+ * receiving state changes; safe to call multiple times and from within [StateObserver] callbacks.
+ * Like registration, [cancel] is a main-thread operation.
+ */
+public fun interface ObserverHandle {
+    public fun cancel()
+}
+
 public interface ClarityClient {
     /**
      * The current lifecycle state. Reads must occur on the main thread.
@@ -148,6 +168,27 @@ public interface ClarityClient {
      * @return `true` if applied; `false` if the client is not active/paused.
      */
     public fun setConsent(consent: ClarityConsent): Boolean
+
+    /**
+     * Subscribes [observer] to [state] transitions.
+     *
+     * [observer] is invoked **immediately with the current state** on registration, then again on
+     * every subsequent state **change** (same-value reassignments do not fire). All invocations,
+     * including the immediate one, happen on the platform main thread.
+     *
+     * Like the best-effort reads [state] / [isSupported] / [isPaused], `observeState` and the
+     * returned [ObserverHandle.cancel] are main-thread operations by contract: they are not
+     * dispatched or enforced by [ClarityConfig.dispatchStrategy] (the handle must be returned
+     * synchronously, which an asynchronous dispatch cannot do). All state mutations already run
+     * on the main thread, so this is safe to call from any main-thread entry point.
+     *
+     * Keep the returned [ObserverHandle] and call [ObserverHandle.cancel] to stop observing and
+     * avoid leaking the observer (e.g. in Compose, `cancel()` on disposal). `cancel()` is safe to
+     * call from within an [StateObserver] callback.
+     *
+     * @return a handle whose [ObserverHandle.cancel] unsubscribes [observer].
+     */
+    public fun observeState(observer: StateObserver): ObserverHandle
 }
 
 /**
@@ -174,4 +215,10 @@ private object NoOpClarityClient : ClarityClient {
     override fun getCurrentSessionUrl(): String? = null
     override fun setOnSessionStartedCallback(callback: (String) -> Unit): Boolean = false
     override fun setConsent(consent: ClarityConsent): Boolean = false
+    override fun observeState(observer: StateObserver): ObserverHandle {
+        // NoOp never changes state, so deliver the current (Disabled) state once, then return a
+        // handle whose cancel() is a no-op (nothing was registered to remove).
+        observer.onStateChanged(state)
+        return ObserverHandle { }
+    }
 }

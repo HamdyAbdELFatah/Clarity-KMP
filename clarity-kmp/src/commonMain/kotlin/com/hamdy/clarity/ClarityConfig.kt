@@ -23,6 +23,30 @@ package com.hamdy.clarity
  * @param customSessionId optional session id, validated to ≤ [MAX_VALUE_LENGTH] chars.
  * @param customTags optional tags applied on session start; keys and each value
  *                   validated to ≤ [MAX_VALUE_LENGTH] chars and value-sets must be non-empty.
+ * @param bufferUntilActive when `true` (the default), idempotent metadata calls made before
+ *                the first session becomes [ClarityState.Active] — i.e. while the client is
+ *                [ClarityState.InitializationAccepted] — are **buffered and replayed** on the
+ *                next session start, instead of being silently dropped. This prevents the
+ *                common data-loss footgun of tagging/identifying a user before Clarity's
+ *                async initialization has finished. Only idempotent setters are buffered
+ *                ([ClarityClient.setCustomUserId], [ClarityClient.setCustomSessionId],
+ *                [ClarityClient.setCustomTag], [ClarityClient.setCurrentScreenName]);
+ *                point-in-time calls ([ClarityClient.sendCustomEvent], pause/resume) are
+ *                never buffered. Set `false` to restore the original drop-on-the-floor
+ *                behavior (these calls return `false` when not yet active).
+ * @param dispatchStrategy how calls made **off the platform main thread** are handled. The
+ *                default [ClarityDispatchStrategy.EnforceMainThread] preserves the strict,
+ *                fail-fast contract: any off-main mutating call throws [IllegalStateException]
+ *                (use this when your code is already main-thread-bound, e.g. Compose). Opt
+ *                into [ClarityDispatchStrategy.DispatchToMain] to make off-main calls safe:
+ *                the whole operation (validation + state mutation + SDK call) is posted to the
+ *                main thread and the call returns `true` ("accepted, will be applied") instead
+ *                of blocking or throwing. Under `DispatchToMain` a call made **on** the main
+ *                thread behaves exactly as under `EnforceMainThread` (synchronous, real result).
+ *                Reads that cannot be satisfied synchronously from a background thread degrade
+ *                gracefully: [ClarityClient.getCurrentSessionUrl] returns `null` when off-main.
+ *                The strategy is advisory for [ClarityClient.state]/[ClarityClient.isSupported]/
+ *                [ClarityClient.isPaused], which stay cheap best-effort reads.
  */
 public data class ClarityConfig(
     val projectId: String,
@@ -31,6 +55,8 @@ public data class ClarityConfig(
     val customUserId: String? = null,
     val customSessionId: String? = null,
     val customTags: Map<String, Set<String>> = emptyMap(),
+    val bufferUntilActive: Boolean = true,
+    val dispatchStrategy: ClarityDispatchStrategy = ClarityDispatchStrategy.EnforceMainThread,
 ) {
     init {
         require(!enabled || projectId.isNotBlank()) { "projectId must not be blank when Clarity is enabled." }
@@ -80,6 +106,33 @@ public data class ClarityConsent(
  * Maps 1:1 to the native Clarity SDK log levels on each platform.
  */
 public enum class ClarityLogLevel { None, Error, Warning, Info, Debug, Verbose }
+
+/**
+ * How [ClarityClient] handles a call made **off the platform main thread**.
+ *
+ * Every Clarity mutating call ultimately runs on the platform main thread regardless of
+ * strategy; this controls what happens when *you* call from another thread.
+ *
+ * - [EnforceMainThread] — the safe default: an off-main call throws [IllegalStateException]
+ *   so misuse is caught early. Use this when your analytics calls are already main-thread
+ *   bound (e.g. invoked from Compose or the UI layer).
+ * - [DispatchToMain] — off-main calls are accepted and posted to the main thread for you.
+ *   A mutating call returns `true` ("accepted / queued") rather than blocking or throwing,
+ *   and the whole operation runs on main as a unit so main stays the single mutator.
+ *
+ * Under [DispatchToMain], a call made **on** the main thread is identical to
+ * [EnforceMainThread]: synchronous, with its real result. See [ClarityConfig.dispatchStrategy].
+ */
+public enum class ClarityDispatchStrategy {
+    /** Off-main calls throw [IllegalStateException]. The default, fail-fast behavior. */
+    EnforceMainThread,
+
+    /**
+     * Off-main mutating calls are posted to the main thread and return `true` (queued);
+     * they never block or throw. `getCurrentSessionUrl()` returns `null` when off-main.
+     */
+    DispatchToMain,
+}
 
 internal fun String.isValidClarityValue(maxLength: Int): Boolean = isNotBlank() && length <= maxLength
 
