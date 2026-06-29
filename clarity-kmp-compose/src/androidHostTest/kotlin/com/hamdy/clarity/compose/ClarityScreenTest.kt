@@ -90,4 +90,24 @@ class ClarityScreenTest {
         // No screen:null reset: the name stays set after the screen leaves the composition.
         assertEquals(listOf("screen:Home"), client.calls)
     }
+
+    @Test
+    fun updatesScreenNameWhenClientChanges() = runComposeUiTest {
+        val clientA = RecordingClarityClient()
+        val clientB = RecordingClarityClient()
+        var currentClient by mutableStateOf<RecordingClarityClient>(clientA)
+        setContent {
+            ClarityScreen(name = "Home", restoreOnExit = true, client = currentClient) { }
+        }
+        waitForIdle()
+        assertEquals(listOf("screen:Home"), clientA.calls)
+        assertEquals(emptyList(), clientB.calls)
+
+        currentClient = clientB
+        waitForIdle()
+        // 1. Old DisposableEffect disposes → clientA.setCurrentScreenName(null)
+        // 2. New LaunchedEffect enters → clientB.setCurrentScreenName("Home")
+        assertEquals(listOf("screen:Home", "screen:null"), clientA.calls)
+        assertEquals(listOf("screen:Home"), clientB.calls)
+    }
 }

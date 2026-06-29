@@ -34,7 +34,7 @@ public fun Modifier.clarityTag(
     value: String,
     client: ClarityClient = LocalClarityClient.current,
 ): Modifier = composed {
-    LaunchedEffect(key, value) {
+    LaunchedEffect(key, value, client) {
         client.setCustomTag(key, value)
     }
     this

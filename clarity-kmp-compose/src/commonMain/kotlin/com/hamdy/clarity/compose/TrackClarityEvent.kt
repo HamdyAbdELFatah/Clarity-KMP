@@ -26,7 +26,7 @@ public fun TrackClarityEvent(
     name: String,
     client: ClarityClient = LocalClarityClient.current,
 ) {
-    LaunchedEffect(name) {
+    LaunchedEffect(name, client) {
         client.sendCustomEvent(name)
     }
 }

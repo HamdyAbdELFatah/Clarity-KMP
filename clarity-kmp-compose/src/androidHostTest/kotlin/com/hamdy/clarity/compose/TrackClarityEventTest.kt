@@ -70,4 +70,23 @@ class TrackClarityEventTest {
         // LaunchedEffect(key1 = name) re-runs when name changes, sending the new event.
         assertEquals(listOf("event:step_a", "event:step_b"), client.calls)
     }
+
+    @Test
+    fun resendsEventWhenClientChanges() = runComposeUiTest {
+        val clientA = RecordingClarityClient()
+        val clientB = RecordingClarityClient()
+        var currentClient by mutableStateOf<RecordingClarityClient>(clientA)
+        setContent {
+            TrackClarityEvent("event_a", client = currentClient)
+        }
+        waitForIdle()
+        assertEquals(listOf("event:event_a"), clientA.calls)
+        assertEquals(emptyList(), clientB.calls)
+
+        currentClient = clientB
+        waitForIdle()
+        // LaunchedEffect(key1 = name, key2 = client) re-runs when client changes, sending it to clientB.
+        assertEquals(listOf("event:event_a"), clientA.calls)
+        assertEquals(listOf("event:event_a"), clientB.calls)
+    }
 }

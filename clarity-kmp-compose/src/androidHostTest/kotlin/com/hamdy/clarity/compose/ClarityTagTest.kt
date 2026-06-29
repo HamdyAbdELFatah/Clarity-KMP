@@ -52,4 +52,23 @@ class ClarityTagTest {
         // LaunchedEffect(key1 = key, key2 = value) re-runs when the value changes.
         assertEquals(listOf("tag:plan=free", "tag:plan=premium"), client.calls)
     }
+
+    @Test
+    fun reappliesTagWhenClientChanges() = runComposeUiTest {
+        val clientA = RecordingClarityClient()
+        val clientB = RecordingClarityClient()
+        var currentClient by mutableStateOf<RecordingClarityClient>(clientA)
+        setContent {
+            Box(modifier = Modifier.clarityTag("plan", "premium", client = currentClient))
+        }
+        waitForIdle()
+        assertEquals(listOf("tag:plan=premium"), clientA.calls)
+        assertEquals(emptyList(), clientB.calls)
+
+        currentClient = clientB
+        waitForIdle()
+        // LaunchedEffect(key1 = key, key2 = value, key3 = client) re-runs when client changes, tagging clientB.
+        assertEquals(listOf("tag:plan=premium"), clientA.calls)
+        assertEquals(listOf("tag:plan=premium"), clientB.calls)
+    }
 }

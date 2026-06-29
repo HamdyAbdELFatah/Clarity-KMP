@@ -36,16 +36,16 @@ public fun ClarityScreen(
     client: ClarityClient = LocalClarityClient.current,
     content: @Composable () -> Unit,
 ) {
-    LaunchedEffect(name) {
+    LaunchedEffect(name, client) {
         client.setCurrentScreenName(name)
     }
 
     // Reset the screen name when this composable leaves the composition so a navigated-away screen
     // does not keep reporting. Deliberately NOT keyed on `name`: an in-place name change is handled
     // by the LaunchedEffect above, and keying this on `name` would dispose (and spuriously reset to
-    // null) on every such change. Keyed on `restoreOnExit` so toggling it re-evaluates which branch
-    // `onDispose` takes; a change to `client` re-subscribes via the closure capture.
-    DisposableEffect(restoreOnExit) {
+    // null) on every such change. Keyed on `restoreOnExit` and `client` so toggling it re-evaluates
+    // which branch `onDispose` takes, and a change to `client` correctly disposes/re-registers.
+    DisposableEffect(restoreOnExit, client) {
         onDispose {
             if (restoreOnExit) client.setCurrentScreenName(null)
         }
