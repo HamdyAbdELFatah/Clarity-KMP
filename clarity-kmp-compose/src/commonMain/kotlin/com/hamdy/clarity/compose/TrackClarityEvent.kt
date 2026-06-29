@@ -10,20 +10,23 @@ import com.hamdy.clarity.ClarityClient
  * Useful for tracking screen views or feature impressions:
  *
  * ```kotlin
- * TrackClarityEventOnFirstComposition("onboarding_shown")
+ * TrackClarityEvent("onboarding_shown")
  * OnboardingContent()
  * ```
  *
- * The event is sent only once per unique [eventName] per composition lifecycle.
+ * The event is sent only once per unique [name] per composition lifecycle: `LaunchedEffect(name)`
+ * does not re-run while [name] is unchanged, so recompositions (even state-driven ones) do not
+ * re-fire it.
  *
- * @param eventName The event name to send to Clarity.
+ * @param name The event name to send to Clarity.
+ * @param client The client to report to; defaults to [LocalClarityClient].
  */
 @Composable
-public fun TrackClarityEventOnFirstComposition(
-    eventName: String,
+public fun TrackClarityEvent(
+    name: String,
     client: ClarityClient = LocalClarityClient.current,
 ) {
-    LaunchedEffect(eventName) {
-        client.sendCustomEvent(eventName)
+    LaunchedEffect(name) {
+        client.sendCustomEvent(name)
     }
 }
