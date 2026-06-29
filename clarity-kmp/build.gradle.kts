@@ -15,6 +15,16 @@ kotlin {
         compileSdk = 36
         minSdk = 24
 
+        // Ship ProGuard/R8 keep rules for the transitive Microsoft Clarity SDK so that
+        // consumers do not need to know the underlying dependency to keep it safe in
+        // release builds.
+        optimization {
+            consumerKeepRules.apply {
+                publish = true
+                file("consumer-rules.pro")
+            }
+        }
+
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
         }

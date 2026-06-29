@@ -14,6 +14,16 @@ kotlin {
         compileSdk = 36
         minSdk = 24
 
+        // Ship ProGuard/R8 keep rules for the transitive Microsoft Clarity SDK so that
+        // consumers do not need to know the underlying dependency to keep it safe in
+        // release builds.
+        optimization {
+            consumerKeepRules.apply {
+                publish = true
+                file("consumer-rules.pro")
+            }
+        }
+
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
         }
@@ -39,9 +49,9 @@ kotlin {
             api(project(":clarity-kmp")) {
                 exclude(group = "com.microsoft.clarity", module = "clarity")
             }
-            api(compose.runtime)
-            implementation(compose.foundation)
-            api(compose.ui)
+            api(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            api(libs.compose.ui)
         }
 
         commonTest.dependencies {
@@ -63,8 +73,7 @@ kotlin {
         androidHostTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.robolectric)
-            @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
-            implementation(compose.uiTest)
+            implementation(libs.compose.ui.test)
         }
     }
 }

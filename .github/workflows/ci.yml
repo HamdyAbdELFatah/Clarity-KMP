@@ -19,7 +19,7 @@ jobs:
           java-version: "17"
           cache: gradle
       - uses: android-actions/setup-android@v3
-      - run: ./gradlew :clarity-kmp:testDebugUnitTest :clarity-kmp-compose:testDebugUnitTest lintRelease apiCheck dokkaGenerate --stacktrace
+      - run: ./gradlew :clarity-kmp:testAndroidHostTest :clarity-kmp-compose:testAndroidHostTest lintRelease apiCheck dokkaGenerate --stacktrace
 
   apple:
     runs-on: macos-15
