@@ -137,26 +137,37 @@ clarity.sendCustomEvent("purchase_submitted")
 **Rules of thumb:**
 
 - Every mutating method returns `Boolean` — `true` means accepted, `false` means the client isn't active yet or the input was invalid. It never throws.
-- Wait for `ClarityState.Active` (or the session callback) before sending session metadata. `InitializationAccepted` only means the async init request was accepted.
+- With `bufferUntilActive` (default), metadata calls made before `Active` are buffered and replayed on session start, so you don't need to wait for `Active` to tag/identify a user. Point-in-time calls (`sendCustomEvent`, `pause`/`resume`) are never buffered and still require `Active`.
 - Initial `customUserId` / `customSessionId` / `customTags` set in `ClarityConfig` are re-applied automatically on every new session.
 - `pause()` / `resume()` control capture at runtime; `enabled = false` in config gives you a disabled client that records nothing.
-- **All APIs must be called on the platform main thread.**
+- **All APIs run on the platform main thread.** Under the default `EnforceMainThread` strategy, off-main calls throw; switch to `DispatchToMain` to make them safe from background threads.
 
 ## 🎨 Compose helpers (`clarity-kmp-compose`)
 
 ```kotlin
 ClarityProvider(clarity) {                       // make client available below
-    ClarityScreen("Checkout") {                  // auto-reports this screen
+    ClarityScreen("Checkout") {                  // auto-reports this screen; resets on exit
         Button(
-            modifier = Modifier.clarityClickable("purchase_clicked"),  // track taps
+            modifier = Modifier.clarityTag("plan", "premium")   // tag the session
+                .clarityClickable("purchase_clicked"),          // track taps
             onClick = ::purchase,
         ) { Text("Buy") }
     }
 }
+
+// Reactive lifecycle state in any composable
+val state by rememberClarityState()
+when (state) {
+    ClarityState.Active -> Text("Recording")
+    else -> Text("Idle")
+}
+
+TrackClarityEvent("home_viewed")                 // fire an event once on first composition
 ```
 
 - `LocalClarityClient` defaults to a no-op client, so **previews and tests record nothing** unless you provide a real one.
-- `TrackClarityEventOnFirstComposition("home_viewed")` fires an event once per composition lifecycle.
+- `ClarityScreen` reports its name on enter and, by default (`restoreOnExit = true`), clears it on exit so a navigated-away screen stops reporting.
+- `rememberClarityState()` turns `ClarityClient.state` into reactive `State`, backed by `observeState` and disposed automatically.
 
 ## 📖 API reference
 
@@ -176,6 +187,24 @@ ClarityProvider(clarity) {                       // make client available below
 | `getCurrentSessionUrl()` | Replay URL of the current session, or `null` |
 | `setOnSessionStartedCallback { }` | Called on every new session |
 | `setConsent(ClarityConsent)` | Apply GDPR consent (Android: analytics + ads; iOS: analytics only) |
+| `observeState { }` | Subscribe to state transitions (immediate current value, then every change); returns a cancellable handle |
+
+### Configuration options (`ClarityConfig`)
+
+| Option | Default | Purpose |
+|---|---|---|
+| `bufferUntilActive` | `true` | Buffer idempotent metadata calls made before `Active` and replay them on session start (prevents data loss during async init) |
+| `dispatchStrategy` | `EnforceMainThread` | `EnforceMainThread` throws on off-main calls (fail-fast); `DispatchToMain` posts them to the main thread and returns `true`/`null` instead |
+
+### Compose helpers (`clarity-kmp-compose`)
+
+| Helper | Purpose |
+|---|---|
+| `ClarityScreen(name, restoreOnExit = true)` | Report a screen name; clear it on exit by default |
+| `rememberClarityState()` | `ClarityClient.state` as reactive Compose `State` |
+| `Modifier.clarityTag(key, value)` | Tag the session from any node |
+| `Modifier.clarityClickable(event)` | Track an event on click |
+| `TrackClarityEvent(name)` | Fire an event once on first composition |
 
 Limits (Microsoft's): IDs / tags / screen names ≤ 255 chars; event names ≤ 254 chars.
 
