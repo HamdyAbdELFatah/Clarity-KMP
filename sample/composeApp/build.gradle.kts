@@ -25,9 +25,16 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":clarity-kmp-compose"))
+            // The deprecated compose.* accessors still resolve through the Compose Multiplatform
+            // plugin's repositories/BOM, while the equivalent version-catalog coordinates are not
+            // reliably available on mavenCentral() for all artifacts. Keep them here in the sample.
+            @Suppress("DEPRECATION")
             implementation(compose.runtime)
+            @Suppress("DEPRECATION")
             implementation(compose.foundation)
+            @Suppress("DEPRECATION")
             implementation(compose.material3)
+            @Suppress("DEPRECATION")
             implementation(compose.ui)
         }
 
