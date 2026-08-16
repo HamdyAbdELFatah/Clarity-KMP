@@ -3,6 +3,10 @@
 > **Use Microsoft Clarity in Compose Multiplatform with declarative, simple Kotlin APIs.**  
 > Automatically track screens, click events, and session tags across Android and iOS.
 
+> **Disclaimer:** This is an **unofficial** community library and is not affiliated with,
+> endorsed by, or sponsored by Microsoft. "Clarity" is a trademark of Microsoft Corporation.
+> All platform SDKs are the property of their respective owners.
+
 ---
 
 ## ⚡ Quick Start: Add Dependency

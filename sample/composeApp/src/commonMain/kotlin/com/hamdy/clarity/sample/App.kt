@@ -39,7 +39,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hamdy.clarity.ClarityClient
 import com.hamdy.clarity.ClarityState
-import com.hamdy.clarity.*
+import com.hamdy.clarity.screen
+import com.hamdy.clarity.sessionId
+import com.hamdy.clarity.tag
+import com.hamdy.clarity.trackEvent
+import com.hamdy.clarity.userId
 import com.hamdy.clarity.compose.ClarityProvider
 import com.hamdy.clarity.compose.ClarityScreen
 import com.hamdy.clarity.compose.TrackClarityEvent
@@ -70,6 +74,7 @@ private fun SampleHomeScreen(clarityClient: ClarityClient) {
 
     val clarityState by rememberClarityState()
     val eventLog = remember { mutableStateListOf<LogEntry>() }
+    var logIndex by remember { mutableStateOf(0) }
 
     var eventName by remember { mutableStateOf("button_clicked") }
     var userId by remember { mutableStateOf("sample_user_123") }
@@ -80,7 +85,7 @@ private fun SampleHomeScreen(clarityClient: ClarityClient) {
     var sessionUrl by remember { mutableStateOf<String?>(null) }
 
     fun log(action: String, result: Boolean) {
-        eventLog.add(0, LogEntry(action, result.toString(), nextLogIndex()))
+        eventLog.add(0, LogEntry(action, result.toString(), "#${++logIndex}"))
     }
 
     Scaffold { innerPadding ->
@@ -601,7 +606,3 @@ private fun LogEntryRow(entry: LogEntry) {
         }
     }
 }
-
-private var logIndex = 0
-
-private fun nextLogIndex(): String = "#${++logIndex}"

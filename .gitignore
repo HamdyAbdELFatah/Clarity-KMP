@@ -1,6 +1,8 @@
 .gradle/
 .idea/
 .kotlin/
+.code-review-graph/
+.sisyphus/
 **/build/
 local.properties
 *.xcuserstate
