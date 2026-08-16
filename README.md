@@ -9,6 +9,27 @@
 
 ---
 
+## 🧩 Why Clarity KMP?
+
+The raw Microsoft SDK requires you to manage initialization callbacks, thread safety, value
+length limits, and lifecycle plumbing yourself — on two different platforms. This wrapper
+removes all of that:
+
+| Task | Raw Microsoft SDK | With Clarity KMP |
+|---|---|---|
+| Initialize | Handle async init + session callback manually | `createClarityClient(config)` — done |
+| Tag user before init finishes | Silently dropped ❌ | Buffered & replayed on session start ✅ |
+| Track a screen | Manual set/clear on enter & exit | `ClarityScreen("Name") { }` |
+| Track a tap | Custom click handling + event call | `Modifier.clarityClickable("name") { }` |
+| Tag a session | Manual call on every screen | `Modifier.clarityTag("plan", "gold")` |
+| Thread safety | Your responsibility | Enforced (or auto-dispatched to main) |
+| Value length limits | Docs only — rejected silently | Validated up front, fail-fast |
+| R8/ProGuard keep rules | You find & add them | Shipped with the artifact |
+| Compose previews/tests | SDK crashes or no-ops | Safe `noOpClarityClient()` default |
+| Check if recording | N/A | `rememberClarityState()` |
+
+---
+
 ## ⚡ Quick Start: Add Dependency
 
 Add the Compose Multiplatform artifact to your `commonMain` dependencies in your `build.gradle.kts` file:
@@ -65,6 +86,19 @@ ClarityProvider(clarityClient) {
 ---
 
 ## 🚀 Easy Setup Guide
+
+### 📋 Minimum Requirements
+
+| Requirement | Version |
+|---|---|
+| Kotlin | 2.x |
+| Compose Multiplatform | 1.x |
+| Android minSdk | 24 (API 24) — capture needs **API 29+** (Android 10) |
+| iOS deployment target | 15.0 |
+| Microsoft Clarity iOS SDK | 3.5.3+ (linked via SPM/CocoaPods, see below) |
+
+Below the capture floors (Android 10 / iOS 15) the app runs safely but records nothing —
+the client reports `ClarityState.Unsupported`.
 
 ### 🤖 Android Setup (Zero Config!)
 Gradle pulls Microsoft's native Android Compose SDK automatically. 
@@ -147,6 +181,36 @@ clarity.tag("plan", "premium")
 clarity.setConsent(ClarityConsent(analyticsStorage = true))
 ```
 
+### 6. Tracking from ViewModels / Business Logic (No Compose Required)
+
+The fluent API works anywhere you have the `ClarityClient` — ViewModels, repositories, use cases:
+
+```kotlin
+class CheckoutViewModel(private val clarity: ClarityClient) {
+
+    fun checkoutStarted() {
+        clarity.withScreen("Checkout") {   // sets screen for the block, resets after
+            clarity.tag("plan", "premium") // fluent alias for setCustomTag
+        }
+    }
+
+    fun purchaseCompleted() {
+        clarity.trackEvent("purchase_completed")
+        clarity.userId("user_abc_123")     // fluent alias for setCustomUserId
+    }
+
+    fun onAppBackgrounded() {
+        clarity.ifActive {                 // guard: only runs while recording
+            clarity.pause()
+        }
+    }
+}
+```
+
+Every call returns `Boolean` (`true` = accepted/applied), so you can log or react to failures
+without exceptions. Batch multiple events/tags in one call with `sendEvents(...)` /
+`setTags(...)`.
+
 ---
 
 ## 🤖 AI Assistant / Prompt Guide
@@ -198,6 +262,14 @@ clarity.withScreen("Dashboard") {
 
 ## ❓ Simple Troubleshooting
 
+*   **My events/screens aren't showing up?**
+    *   First, check the client state in your UI: `val state by rememberClarityState()` — it must be
+        `ClarityState.Active` for calls to be recorded. If it stays `InitializationAccepted`, calls
+        made before activation are buffered and applied on session start (default behavior).
+    *   If state is `Failed` or `Unsupported`, see the entries below. In debug builds, set
+        `logLevel = ClarityLogLevel.Debug` on the config to see native SDK logs.
+    *   Remember that `projectId` must be your real Clarity dashboard project ID — the sample's
+        `YOUR_PROJECT_ID` placeholder records nothing.
 *   **Status is `Unsupported`?**
     *   Microsoft Clarity only records data on **Android 10+ (API 29+)** and **iOS 15+**. Below these versions, the app runs safely without crashing, but it won't record anything.
 *   **iOS Build fails with `Undefined symbols`?**
