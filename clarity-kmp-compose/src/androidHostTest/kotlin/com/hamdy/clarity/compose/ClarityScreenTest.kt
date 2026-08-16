@@ -110,4 +110,40 @@ class ClarityScreenTest {
         assertEquals(listOf("screen:Home", "screen:null"), clientA.calls)
         assertEquals(listOf("screen:Home"), clientB.calls)
     }
+
+    @Test
+    fun doesNotClearScreenNameWhenNewScreenActiveDuringTransition() = runComposeUiTest {
+        val client = RecordingClarityClient()
+        var showHome by mutableStateOf(true)
+        var showDetails by mutableStateOf(false)
+
+        setContent {
+            ClarityProvider(client = client) {
+                if (showHome) {
+                    ClarityScreen(name = "Home") { }
+                }
+                if (showDetails) {
+                    ClarityScreen(name = "Details") { }
+                }
+            }
+        }
+        waitForIdle()
+        assertEquals(listOf("screen:Home"), client.calls)
+        assertEquals("Home", client.currentScreenName)
+
+        // 1. Details screen enters composition (transition start: both screens active in UI tree)
+        showDetails = true
+        waitForIdle()
+        assertEquals(listOf("screen:Home", "screen:Details"), client.calls)
+        assertEquals("Details", client.currentScreenName)
+
+        // 2. Home screen leaves composition (transition end: old screen disposed)
+        showHome = false
+        waitForIdle()
+
+        // Screen:Home leaves composition, but because currentScreenName is "Details" (!= "Home"),
+        // Home's disposal does NOT emit screen:null.
+        assertEquals(listOf("screen:Home", "screen:Details"), client.calls)
+        assertEquals("Details", client.currentScreenName)
+    }
 }

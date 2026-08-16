@@ -41,6 +41,8 @@ abstract fun interface com.hamdy.clarity/StateObserver { // com.hamdy.clarity/St
 }
 
 abstract interface com.hamdy.clarity/ClarityClient { // com.hamdy.clarity/ClarityClient|null[0]
+    abstract val currentScreenName // com.hamdy.clarity/ClarityClient.currentScreenName|{}currentScreenName[0]
+        abstract fun <get-currentScreenName>(): kotlin/String? // com.hamdy.clarity/ClarityClient.currentScreenName.<get-currentScreenName>|<get-currentScreenName>(){}[0]
     abstract val isPaused // com.hamdy.clarity/ClarityClient.isPaused|{}isPaused[0]
         abstract fun <get-isPaused>(): kotlin/Boolean // com.hamdy.clarity/ClarityClient.isPaused.<get-isPaused>|<get-isPaused>(){}[0]
     abstract val isSupported // com.hamdy.clarity/ClarityClient.isSupported|{}isSupported[0]

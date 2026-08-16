@@ -55,6 +55,11 @@ public interface ClarityClient {
     public val state: ClarityState
 
     /**
+     * The current screen name set on the client, or `null` if no screen name is active.
+     */
+    public val currentScreenName: String?
+
+    /**
      * `true` when the platform/OS meets Clarity's capture floor (Android API 29+,
      * iOS 15+). When `false`, the SDK is present but records nothing and [state]
      * is [ClarityState.Unsupported]. Reads must occur on the main thread.
@@ -202,6 +207,7 @@ public fun noOpClarityClient(): ClarityClient = NoOpClarityClient
 
 private object NoOpClarityClient : ClarityClient {
     override val state: ClarityState = ClarityState.Disabled
+    override val currentScreenName: String? = null
     override val isSupported: Boolean = false
     override val isPaused: Boolean = false
     override fun setCustomUserId(value: String): Boolean = false

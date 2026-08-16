@@ -3,6 +3,8 @@ package com.hamdy.clarity.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import com.hamdy.clarity.ClarityClient
 
 /**
@@ -36,18 +38,20 @@ public fun ClarityScreen(
     client: ClarityClient = LocalClarityClient.current,
     content: @Composable () -> Unit,
 ) {
+    val currentName by rememberUpdatedState(name)
+
     LaunchedEffect(name, client) {
         client.setCurrentScreenName(name)
     }
 
     // Reset the screen name when this composable leaves the composition so a navigated-away screen
-    // does not keep reporting. Deliberately NOT keyed on `name`: an in-place name change is handled
-    // by the LaunchedEffect above, and keying this on `name` would dispose (and spuriously reset to
-    // null) on every such change. Keyed on `restoreOnExit` and `client` so toggling it re-evaluates
-    // which branch `onDispose` takes, and a change to `client` correctly disposes/re-registers.
+    // does not keep reporting. Keyed on `restoreOnExit` and `client`.
+    // Checks `client.currentScreenName == currentName` before clearing to prevent screen transition race conditions.
     DisposableEffect(restoreOnExit, client) {
         onDispose {
-            if (restoreOnExit) client.setCurrentScreenName(null)
+            if (restoreOnExit && client.currentScreenName == currentName) {
+                client.setCurrentScreenName(null)
+            }
         }
     }
 

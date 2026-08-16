@@ -418,6 +418,57 @@ class DefaultClarityClientTest {
         handle.cancel()
         assertEquals(listOf<ClarityState>(ClarityState.Disabled), seen)
     }
+
+    @Test
+    fun currentScreenNameReflectsLastAppliedOrBufferedValue() {
+        val sdk = FakeClaritySdkAdapter()
+        val client = DefaultClarityClient(ClarityConfig("project"), sdk)
+        assertEquals(null, client.currentScreenName)
+
+        // Buffered screen name while InitializationAccepted
+        assertTrue(client.setCurrentScreenName("Home"))
+        assertEquals("Home", client.currentScreenName)
+
+        sdk.startSession("session-1")
+        assertEquals("Home", client.currentScreenName)
+
+        // Update active screen name
+        assertTrue(client.setCurrentScreenName("Settings"))
+        assertEquals("Settings", client.currentScreenName)
+
+        // Reset screen name
+        assertTrue(client.setCurrentScreenName(null))
+        assertEquals(null, client.currentScreenName)
+
+        // Invalid screen name fails validation and does not mutate currentScreenName
+        client.setCurrentScreenName("Settings")
+        assertFalse(client.setCurrentScreenName("x".repeat(256)))
+        assertEquals("Settings", client.currentScreenName)
+    }
+
+    @Test
+    fun observeStateAndCancelThrowWhenCalledOffMainThread() {
+        val sdk = FakeClaritySdkAdapter()
+        val client = DefaultClarityClient(
+            ClarityConfig("project"),
+            sdk,
+            FakeMainThreadAccess(isMainThread = false),
+        )
+
+        assertFailsWith<IllegalStateException> {
+            client.observeState { }
+        }
+
+        // Also test cancel off-main
+        val threads = FakeMainThreadAccess(isMainThread = true)
+        val testClient = DefaultClarityClient(ClarityConfig("project"), sdk, threads)
+        val handle = testClient.observeState { }
+
+        threads.isMainThread = false
+        assertFailsWith<IllegalStateException> {
+            handle.cancel()
+        }
+    }
 }
 
 private class FakeClaritySdkAdapter(
@@ -470,7 +521,7 @@ private class FakeClaritySdkAdapter(
  * deterministic (no real Handler / dispatch_async in a unit test).
  */
 private class FakeMainThreadAccess(
-    override val isMainThread: Boolean,
+    override var isMainThread: Boolean,
 ) : MainThreadAccess {
     val postedActions = mutableListOf<() -> Unit>()
 

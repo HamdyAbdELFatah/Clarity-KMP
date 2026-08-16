@@ -29,6 +29,9 @@ internal class DefaultClarityClient(
      */
     private val observers = mutableListOf<StateObserver>()
 
+    override var currentScreenName: String? = null
+        private set
+
     override var state: ClarityState = ClarityState.NotInitialized
         private set
 
@@ -71,9 +74,14 @@ internal class DefaultClarityClient(
     }
 
     override fun setCurrentScreenName(value: String?): Boolean = onMain(true) {
-        applyMetadata(value == null || value.isValidClarityValue(ClarityConfig.MAX_VALUE_LENGTH)) {
+        val valid = value == null || value.isValidClarityValue(ClarityConfig.MAX_VALUE_LENGTH)
+        val applied = applyMetadata(valid) {
             sdk.setCurrentScreenName(value)
         }
+        if (applied) {
+            currentScreenName = value
+        }
+        applied
     }
 
     override fun sendCustomEvent(value: String): Boolean = onMain(true) {
@@ -146,13 +154,23 @@ internal class DefaultClarityClient(
     }
 
     override fun observeState(observer: StateObserver): ObserverHandle {
+        checkMainThread()
         observers.add(observer)
         // Immediate delivery of the current state so a caller can seed its own state (e.g.
         // Compose rememberClarityState) at registration without needing a second read.
         observer.onStateChanged(state)
         // cancel() removes the observer; safe to call multiple times (remove is idempotent) and
         // from within an onStateChanged callback (updateState snapshots before iterating).
-        return ObserverHandle { observers.remove(observer) }
+        return ObserverHandle {
+            checkMainThread()
+            observers.remove(observer)
+        }
+    }
+
+    private fun checkMainThread() {
+        if (!mainThreadAccess.isMainThread) {
+            throw IllegalStateException("Clarity observers must be registered and cancelled on the platform main thread.")
+        }
     }
 
     private fun onSessionStarted(sessionId: String) {

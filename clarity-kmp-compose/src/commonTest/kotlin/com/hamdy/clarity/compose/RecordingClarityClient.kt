@@ -46,9 +46,15 @@ internal class RecordingClarityClient(
         observers.toList().forEach { it.onStateChanged(newState) }
     }
 
+    override var currentScreenName: String? = null
+        private set
+
     override fun setCustomUserId(value: String): Boolean = record("user:$value")
     override fun setCustomSessionId(value: String): Boolean = record("session:$value")
-    override fun setCurrentScreenName(value: String?): Boolean = record("screen:$value")
+    override fun setCurrentScreenName(value: String?): Boolean {
+        currentScreenName = value
+        return record("screen:$value")
+    }
     override fun sendCustomEvent(value: String): Boolean = record("event:$value")
     override fun setCustomTag(key: String, values: Set<String>): Boolean =
         record("tag:$key=${values.sorted().joinToString(",")}")
