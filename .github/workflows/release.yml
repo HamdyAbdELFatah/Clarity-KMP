@@ -28,6 +28,15 @@ jobs:
 
       - uses: android-actions/setup-android@v3
 
+      # Compose Multiplatform 1.11's ui-uikit links Apple's UIUtilities framework, which only
+      # exists in newer SDKs; the macos-15 image defaults to an older Xcode whose SDK lacks it.
+      # Select the newest installed Xcode so the iOS tests and klib API checks can link.
+      - name: Select latest Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$XCODE" ]; then sudo xcode-select -s "$XCODE"; fi
+          xcodebuild -version
+
       # Confirm the public API hasn't drifted and that tests pass before publishing.
       - name: Verify (tests, API check, lint)
         run: |

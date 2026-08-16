@@ -19,7 +19,10 @@ jobs:
           java-version: "17"
           cache: gradle
       - uses: android-actions/setup-android@v3
-      - run: ./gradlew :clarity-kmp:testAndroidHostTest :clarity-kmp-compose:testAndroidHostTest lintRelease apiCheck dokkaGenerate --stacktrace
+      # klib API checks compile the iOS targets, which a Linux host cannot do; the generated
+      # dump would be empty and the check would fail spuriously. klib checks run in the apple
+      # job (macOS), where the iOS klibs are actually built.
+      - run: ./gradlew :clarity-kmp:testAndroidHostTest :clarity-kmp-compose:testAndroidHostTest lintRelease apiCheck dokkaGenerate --stacktrace -x :clarity-kmp:klibApiCheck -x :clarity-kmp-compose:klibApiCheck
 
   apple:
     runs-on: macos-15
@@ -30,6 +33,14 @@ jobs:
           distribution: temurin
           java-version: "17"
           cache: gradle
+      # Compose Multiplatform 1.11's ui-uikit links Apple's UIUtilities framework, which only
+      # exists in newer SDKs; the macos-15 image defaults to an older Xcode whose SDK lacks it
+      # (undefined symbol UIViewLayoutRegion at link time). Select the newest installed Xcode.
+      - name: Select latest Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$XCODE" ]; then sudo xcode-select -s "$XCODE"; fi
+          xcodebuild -version
       - run: ./gradlew :clarity-kmp:compileTestKotlinIosSimulatorArm64 :clarity-kmp-compose:iosSimulatorArm64Test :sample:composeApp:linkDebugFrameworkIosSimulatorArm64 apiCheck --stacktrace
       - run: xcodebuild -project sample/iosApp/iosApp.xcodeproj -scheme iosApp -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO build
 
