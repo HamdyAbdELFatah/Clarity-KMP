@@ -92,7 +92,7 @@ mavenPublishing {
     signAllPublications()
 
     coordinates(
-        groupId = "com.hamdy.clarity",
+        groupId = "io.github.hamdyabdelfatah",
         artifactId = "clarity-kmp-compose",
         version = project.version.toString()
     )

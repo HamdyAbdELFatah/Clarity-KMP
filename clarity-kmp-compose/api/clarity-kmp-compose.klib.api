@@ -5,7 +5,7 @@
 // - Show manifest properties: true
 // - Show declarations: true
 
-// Library unique name: <com.hamdy.clarity:clarity-kmp-compose>
+// Library unique name: <io.github.hamdyabdelfatah:clarity-kmp-compose>
 final val com.hamdy.clarity.compose/LocalClarityClient // com.hamdy.clarity.compose/LocalClarityClient|{}LocalClarityClient[0]
     final fun <get-LocalClarityClient>(): androidx.compose.runtime/ProvidableCompositionLocal<com.hamdy.clarity/ClarityClient> // com.hamdy.clarity.compose/LocalClarityClient.<get-LocalClarityClient>|<get-LocalClarityClient>(){}[0]
 

@@ -21,7 +21,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation("com.hamdy.clarity:clarity-kmp-compose:0.1.0-SNAPSHOT")
+            implementation("io.github.hamdyabdelfatah:clarity-kmp-compose:0.1.0-SNAPSHOT")
         }
     }
 }

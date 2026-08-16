@@ -37,7 +37,7 @@ Add the Compose Multiplatform artifact to your `commonMain` dependencies in your
 ```kotlin
 commonMain.dependencies {
     // Primary dependency for Compose Multiplatform apps
-    implementation("com.hamdy.clarity:clarity-kmp-compose:0.1.0")
+    implementation("io.github.hamdyabdelfatah:clarity-kmp-compose:0.1.0")
 }
 ```
 
@@ -238,7 +238,7 @@ If you are working on a legacy Android View-based app, or a pure UIKit/SwiftUI i
 ### 1. Add Core Dependency
 ```kotlin
 commonMain.dependencies {
-    implementation("com.hamdy.clarity:clarity-kmp:0.1.0")
+    implementation("io.github.hamdyabdelfatah:clarity-kmp:0.1.0")
 }
 ```
 
@@ -277,7 +277,7 @@ clarity.withScreen("Dashboard") {
 *   **Duplicate classes errors on Android?**
     *   If you mixed both modules, exclude the duplicate Microsoft core classes in your Android dependencies:
     ```kotlin
-    implementation("com.hamdy.clarity:clarity-kmp") {
+    implementation("io.github.hamdyabdelfatah:clarity-kmp") {
         exclude(group = "com.microsoft.clarity", module = "clarity")
     }
     ```

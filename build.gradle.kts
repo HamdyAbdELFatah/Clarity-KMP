@@ -15,7 +15,7 @@ val releaseVersion = providers.gradleProperty("VERSION_NAME")
     .getOrElse("0.1.0-SNAPSHOT")
 
 allprojects {
-    group = "com.hamdy.clarity"
+    group = "io.github.hamdyabdelfatah"
     version = releaseVersion
 }
 

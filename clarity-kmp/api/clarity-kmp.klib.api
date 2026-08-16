@@ -5,7 +5,7 @@
 // - Show manifest properties: true
 // - Show declarations: true
 
-// Library unique name: <com.hamdy.clarity:clarity-kmp>
+// Library unique name: <io.github.hamdyabdelfatah:clarity-kmp>
 final enum class com.hamdy.clarity/ClarityDispatchStrategy : kotlin/Enum<com.hamdy.clarity/ClarityDispatchStrategy> { // com.hamdy.clarity/ClarityDispatchStrategy|null[0]
     enum entry DispatchToMain // com.hamdy.clarity/ClarityDispatchStrategy.DispatchToMain|null[0]
     enum entry EnforceMainThread // com.hamdy.clarity/ClarityDispatchStrategy.EnforceMainThread|null[0]
