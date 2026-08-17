@@ -20,9 +20,11 @@ Secrets and variables → Actions → New repository secret**):
 |---|---|
 | `MAVEN_CENTRAL_USERNAME` | Central Portal user token name (https://central.sonatype.com → Account → User Token) |
 | `MAVEN_CENTRAL_PASSWORD` | Central Portal user token password |
-| `SIGNING_KEY_ID` | Last 8 chars of the GPG key fingerprint |
-| `SIGNING_KEY` | The GPG private key, ASCII-armored, base64-encoded (`gpg --armor --export-secret-keys KEYID \| base64`) |
+| `SIGNING_KEY_ID` | Last 8 chars of the GPG key fingerprint (`gpg --list-secret-keys --keyid-format=long`) |
+| `SIGNING_KEY` | The GPG private key as the **raw ASCII-armored text** — `gpg --armor --export-secret-keys KEYID`. Do **not** base64-encode it: Gradle's in-memory PGP provider feeds the value directly to the armor decoder, so the `-----BEGIN PGP PRIVATE KEY BLOCK-----` header must be present (line breaks included). Store the value with its newlines intact. |
 | `SIGNING_KEY_PASSWORD` | Password protecting the GPG key |
+
+> **Note:** the Vanniktech plugin's KDoc suggests stripping the armor header/footer and line breaks from the key. That applies to older Gradle versions; Gradle 9.4's `useInMemoryPgpKeys` requires the full armored block (headers + newlines). If the publish fails with `Could not read PGP secret key` or `no configured signatory`, first re-check this secret's format.
 
 The workflow maps these to the Gradle properties the Vanniktech plugin expects
 (`ORG_GRADLE_PROJECT_mavenCentralUsername`, `signingInMemoryKeyId`, etc.). For

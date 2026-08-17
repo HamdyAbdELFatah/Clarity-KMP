@@ -52,7 +52,10 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
+          # --no-daemon: the Verify step above starts a Gradle daemon WITHOUT the signing/publish
+          # env vars, and a reused daemon ignores the ORG_GRADLE_PROJECT_* env of this step.
+          # A fresh single-use daemon picks them up, so the in-memory signing key is configured.
           ./gradlew \
             :clarity-kmp:publishAllPublicationsToMavenCentral \
             :clarity-kmp-compose:publishAllPublicationsToMavenCentral \
-            --stacktrace --no-configuration-cache
+            --stacktrace --no-configuration-cache --no-daemon
